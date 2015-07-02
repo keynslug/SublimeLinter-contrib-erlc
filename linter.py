@@ -15,13 +15,21 @@ import re
 from SublimeLinter.lint import Linter, util
 
 
+def erlc():
+    candidates = ["/usr/local/bin/erlc", "/opt/local/bin/erlc"]
+    for p in candidates:
+        if os.popen("which " + p).read():
+            return p
+    return "erlc"
+
+
 class Erlc(Linter):
 
     """Provides an interface to erlc."""
 
     syntax = re.compile(r".*erlang$", re.I)
 
-    executable = "/opt/local/bin/erlc"
+    executable = erlc()
     tempfile_suffix = "erl"
 
     # ERROR FORMAT # <file>:<line>: [Warning:|] <message> #
