@@ -65,10 +65,12 @@ class Erlc(Linter):
 
     DEFAULT_DEPENDENCY_DIRS = [
         "apps",
-        "deps"
+        "deps",
+        "_build/{profile}/lib"
     ]
 
     def get_lint_args(self, view):
+        settings = self.get_view_settings()
         src_dir = os.path.dirname(view.file_name())
         project_dir = os.path.dirname(src_dir)
 
@@ -76,6 +78,9 @@ class Erlc(Linter):
 
         for compiler_opt in self.DEFAULT_COMPILER_OPTS:
             result.append(compiler_opt)
+
+        for symbol_opt in settings.get('define_symbols', []):
+            result.append("-D" + symbol_opt)
 
         for include_dir in self.DEFAULT_INCLUDE_DIRS:
             include_path = self.find_file_or_dir(include_dir, view)
@@ -88,8 +93,9 @@ class Erlc(Linter):
                 result.extend(["-pa", code_path])
 
         # Search for addtional include and code paths in depedencies
+        path_params = {'profile': settings.get('build_profile', 'default')}
         for dependecy_root_dir in self.DEFAULT_DEPENDENCY_DIRS:
-            dependecy_root = self.find_file_or_dir(dependecy_root_dir, view)
+            dependecy_root = self.find_file_or_dir(dependecy_root_dir.format(**path_params), view)
             if dependecy_root:
                 result.extend(["-I", dependecy_root])
                 for code_path_dir in glob.glob(os.path.join(dependecy_root, "*", "ebin")):
